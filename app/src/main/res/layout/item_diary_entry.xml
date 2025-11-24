@@ -1,0 +1,130 @@
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <!-- Existing LinearLayout as a child -->
+    <LinearLayout
+        android:orientation="vertical"
+        android:padding="8dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <!-- Text Entry (Visible for text type) -->
+        <LinearLayout
+            android:id="@+id/taskContainer"
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone">
+
+            <ImageView
+                android:id="@+id/taskCheckbox"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="8dp"
+                android:src="@drawable/ic_blankbox"
+                android:contentDescription="Task Checkbox"/>
+
+            <TextView
+                android:id="@+id/taskText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:textColor="@color/md_theme_dark_tertiary"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/textTask"
+            android:textSize="16sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/md_theme_dark_onPrimaryContainer"
+            android:maxLines="4"
+            android:ellipsize="end"/>
+        <TextView
+            android:id="@+id/readMore"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Read more"
+            android:textColor="@color/md_theme_dark_tertiary"
+            android:textSize="13sp"
+            android:visibility="gone"
+            android:paddingTop="2dp"/>
+
+        <!-- Image Entry (Visible for image type) -->
+        <ImageView
+            android:id="@+id/imageEntry"
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            android:scaleType="centerCrop"
+            android:adjustViewBounds="true"
+            android:layout_margin="8dp"
+            android:contentDescription="Diary Entry Image" />
+
+        <!-- Audio Entry (Visible for audio type) -->
+        <LinearLayout
+            android:id="@+id/audioContainer"
+            android:visibility="gone"
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <Button android:id="@+id/audioPlayButton"
+                android:text="Play"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <!-- Date/Time -->
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/dateTime"
+                android:textSize="13sp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/md_theme_dark_onSurface2"
+                android:layout_marginTop="3dp"/>
+
+            <ImageButton
+                android:id="@+id/linkedIdButton"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/link"
+                android:background="@android:color/transparent"
+                android:contentDescription="Jump to linked entry"
+                android:scaleType="centerInside"
+                android:padding="2dp"
+                android:layout_gravity="center_vertical"
+                android:layout_marginStart="8dp"
+                android:visibility="gone"/>
+        </LinearLayout>
+
+
+        <!-- Note -->
+        <TextView
+            android:id="@+id/note"
+            android:textSize="13sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/md_theme_dark_tertiary"
+            android:layout_marginTop="2dp"/>
+
+
+
+
+    </LinearLayout>
+
+
+    <!-- Overlay always on top, filling item! -->
+    <View
+        android:id="@+id/highlightOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#8006F0F4"
+        android:visibility="gone"/>
+</FrameLayout>

@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/md_theme_dark_onPrimary"
+    tools:context=".LogBookDetailActivity">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBarLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fitsSystemWindows="true"
+        android:background="@color/md_theme_dark_surface"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize">
+
+            <TextView
+                android:id="@+id/replyModeText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start"
+                android:visibility="gone"
+                android:text="Replying to..."
+                android:textColor="@color/md_theme_dark_onSurface"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/toolbarTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start"
+                android:text="Diary Details"
+                android:textColor="@color/md_theme_dark_onSurface"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                tools:ignore="HardcodedText" />
+
+            <TextView
+                android:id="@+id/chainViewModeTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start"
+                android:visibility="gone"
+                android:text="🔗 Chain View Mode"
+                android:textColor="@color/md_theme_dark_onSurface"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <ImageButton
+                android:id="@+id/chainCancelButton"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_gravity="end|center_vertical"
+                android:visibility="gone"
+                android:src="@drawable/ic_cancel"
+                android:contentDescription="Cancel Chain View"
+                android:background="@android:color/transparent"
+                app:tint="@color/md_theme_dark_secondary" />
+
+            <EditText
+                android:id="@+id/searchInputBar"
+                android:layout_width="340dp"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                android:hint="Search entries..."
+                android:background="@drawable/rounded_input_box"
+                android:textColor="@color/md_theme_dark_onSurface"
+                android:textSize="18sp"
+                android:padding="12dp"
+                android:fontFamily="sans-serif"
+                android:singleLine="true"
+                android:inputType="text"
+                android:elevation="4dp"/>
+            <ImageButton
+                android:id="@+id/cancelSearchButton"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_gravity="end|center_vertical"
+                android:visibility="gone"
+                android:src="@drawable/ic_cancel"
+                android:contentDescription="Cancel Search"
+                android:background="@android:color/transparent"
+                app:tint="@color/md_theme_dark_secondary" />
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="end|center_vertical"
+                android:orientation="horizontal"
+                android:layout_gravity="end">
+
+                <ImageButton
+                    android:id="@+id/pendingButton"
+                    android:layout_width="40dp"
+                    android:layout_height="match_parent"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/ic_pending"
+                    android:contentDescription="Pending"
+                    android:padding="0dp"
+                    app:tint="@color/md_theme_dark_onSurface"/>
+
+                <ImageButton
+                    android:id="@+id/cancelPendingButton"
+                    android:layout_width="40dp"
+                    android:layout_height="match_parent"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/ic_cancel"
+                    android:visibility="gone"
+                    android:contentDescription="Cancel Pending"
+                    android:padding="0dp"
+                    app:tint="@color/md_theme_dark_secondary"/>
+
+                <ImageButton
+                    android:id="@+id/searchButton"
+                    android:layout_width="40dp"
+                    android:layout_height="match_parent"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/ic_search"
+                    android:contentDescription="Search"
+                    android:padding="0dp"
+                    app:tint="@color/md_theme_dark_onSurface"/>
+            </LinearLayout>
+
+
+        </androidx.appcompat.widget.Toolbar>
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/entryRecyclerView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@color/md_theme_dark_onPrimary"
+        app:layout_constraintTop_toBottomOf="@id/appBarLayout"
+        app:layout_constraintBottom_toTopOf="@id/bottomInputBar"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"/>
+
+    <!--    <ListView
+            android:id="@+id/entryListView"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:divider="@color/md_theme_dark_outline"
+            android:dividerHeight="1dp"
+            android:background="@color/md_theme_dark_onPrimary"
+            app:layout_constraintTop_toBottomOf="@id/appBarLayout"
+            app:layout_constraintBottom_toTopOf="@id/bottomInputBar"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"/>
+        <!- Bottom input box + send button -->
+
+    <LinearLayout
+        android:id="@+id/bottomInputBar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:minHeight="48dp"
+        android:orientation="horizontal"
+        android:gravity="bottom"
+        android:paddingStart="12dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="12dp"
+        android:paddingBottom="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent">
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1">
+
+            <EditText
+                android:id="@+id/inputBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/rounded_input_box"
+                android:hint="Type something..."
+                android:inputType="textMultiLine"
+                android:maxLines="4"
+                android:minLines="1"
+                android:gravity="center_vertical|start"
+                android:fontFamily="sans-serif"
+                android:textColor="@color/md_theme_dark_onPrimaryContainer"
+                android:textColorHint="@color/md_theme_dark_onSurfaceVariant"
+                android:paddingEnd="96dp"
+                tools:ignore="HardcodedText" />
+
+            <!-- Attach Button: overlay input, right edge -->
+            <ImageButton
+                android:id="@+id/attachButton"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_gravity="end|center_vertical"
+                android:layout_marginEnd="52dp"
+                android:background="@drawable/rounded_circle_bg"
+                android:src="@drawable/ic_attach_file"
+                android:contentDescription="Attach"
+                android:scaleType="centerInside"
+                app:tint="@color/md_theme_dark_secondary"
+                tools:ignore="HardcodedText" />
+
+            <!-- Camera Button: overlay input, farthest right edge -->
+            <ImageButton
+                android:id="@+id/cameraButton"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_gravity="end|center_vertical"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/rounded_circle_bg"
+                android:src="@drawable/ic_camera_alt"
+                android:contentDescription="Camera"
+                android:scaleType="centerInside"
+                app:tint="@color/md_theme_dark_secondary"
+                tools:ignore="HardcodedText" />
+        </FrameLayout>
+
+        <!-- Send/Mic button: pinned at bottom-right, never gets clipped -->
+        <FrameLayout
+            android:layout_width="48dp"
+            android:layout_height="match_parent"
+            android:minHeight="48dp"
+            android:layout_marginStart="8dp">
+
+            <!-- Send button (base) -->
+            <ImageButton
+                android:id="@+id/sendButton"
+                android:layout_width="45dp"
+                android:layout_height="45dp"
+                android:layout_gravity="bottom|center_horizontal"
+                android:background="@drawable/rounded_send_bg"
+                android:contentDescription="Send"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_send"
+                app:tint="@color/md_theme_dark_onPrimary"
+                tools:ignore="HardcodedText" />
+
+            <!-- Mic overlays send, pinned at bottom and matches send style -->
+            <ImageButton
+                android:id="@+id/micButton"
+                android:layout_width="45dp"
+                android:layout_height="45dp"
+                android:layout_gravity="bottom|center_horizontal"
+                android:background="@drawable/rounded_send_bg"
+                android:src="@drawable/ic_mic"
+                android:contentDescription="Mic"
+                android:scaleType="centerInside"
+                android:visibility="visible"
+                app:tint="@color/md_theme_dark_onPrimary"
+                tools:ignore="HardcodedText" />
+
+        </FrameLayout>
+    </LinearLayout>
+
+
+
+
+
+
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
