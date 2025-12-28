@@ -3,12 +3,21 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <!-- Existing LinearLayout as a child -->
+    <!-- Entry card container with background -->
     <LinearLayout
+        android:id="@+id/entryContainer"
         android:orientation="vertical"
-        android:padding="8dp"
+        android:paddingLeft="6dp"
+        android:paddingRight="6dp"
+        android:paddingTop="1dp"
+        android:paddingBottom="6dp"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:layout_marginStart="2dp"
+        android:layout_marginEnd="2dp"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="2dp"
+        android:background="@drawable/bg_entry_card">
 
         <!-- Text Entry (Visible for text type) -->
         <LinearLayout
@@ -24,14 +33,14 @@
                 android:layout_height="24dp"
                 android:layout_marginEnd="8dp"
                 android:src="@drawable/ic_blankbox"
-                android:contentDescription="Task Checkbox"/>
+                android:contentDescription="Task Checkbox" />
 
             <TextView
                 android:id="@+id/taskText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="16sp"
-                android:textColor="@color/md_theme_dark_tertiary"/>
+                android:textColor="@color/md_theme_dark_onPrimaryContainer" />
         </LinearLayout>
 
         <TextView
@@ -41,16 +50,17 @@
             android:layout_height="wrap_content"
             android:textColor="@color/md_theme_dark_onPrimaryContainer"
             android:maxLines="4"
-            android:ellipsize="end"/>
+            android:ellipsize="end" />
+
         <TextView
             android:id="@+id/readMore"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Read more"
-            android:textColor="@color/md_theme_dark_tertiary"
+            android:textColor="@color/md_theme_dark_primaryContainers"
             android:textSize="13sp"
             android:visibility="gone"
-            android:paddingTop="2dp"/>
+            android:paddingTop="2dp" />
 
         <!-- Image Entry (Visible for image type) -->
         <ImageView
@@ -69,7 +79,9 @@
             android:orientation="horizontal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
-            <Button android:id="@+id/audioPlayButton"
+
+            <Button
+                android:id="@+id/audioPlayButton"
                 android:text="Play"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
@@ -88,7 +100,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@color/md_theme_dark_onSurface2"
-                android:layout_marginTop="3dp"/>
+                android:layout_marginTop="3dp" />
 
             <ImageButton
                 android:id="@+id/linkedIdButton"
@@ -101,9 +113,8 @@
                 android:padding="2dp"
                 android:layout_gravity="center_vertical"
                 android:layout_marginStart="8dp"
-                android:visibility="gone"/>
+                android:visibility="gone" />
         </LinearLayout>
-
 
         <!-- Note -->
         <TextView
@@ -112,13 +123,19 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@color/md_theme_dark_tertiary"
-            android:layout_marginTop="2dp"/>
+            android:layout_marginTop="2dp" />
 
-
-
+        <TextView
+            android:id="@+id/noteReadMore"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Read more"
+            android:textColor="@color/md_theme_dark_primaryContainers"
+            android:textSize="12sp"
+            android:visibility="gone"
+            android:paddingTop="2dp" />
 
     </LinearLayout>
-
 
     <!-- Overlay always on top, filling item! -->
     <View
@@ -126,5 +143,5 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#8006F0F4"
-        android:visibility="gone"/>
+        android:visibility="gone" />
 </FrameLayout>

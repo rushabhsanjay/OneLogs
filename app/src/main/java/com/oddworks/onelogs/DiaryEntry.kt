@@ -8,5 +8,6 @@ data class DiaryEntry(
     val filepath: String?,
     val textTask: String,
     val note: String?,
-    val deleteStat: Boolean
+    val deleteStat: Boolean,
+    val logbookName: String = ""  // add this
 )

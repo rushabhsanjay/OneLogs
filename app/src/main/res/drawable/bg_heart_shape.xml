@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <!-- Approx heart color from your PPT last slide -->
+    <solid android:color="#F4C4C1" />
+
+    <!-- Rounded corners just to have some shape -->
+    <corners android:radius="48dp" />
+</shape>

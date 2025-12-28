@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="?attr/colorControlHighlight">
+
+    <!-- Normal rounded background -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/md_theme_dark_background2" />
+            <corners android:radius="8dp" />
+            <padding
+                android:left="12dp"
+                android:top="8dp"
+                android:right="12dp"
+                android:bottom="8dp" />
+        </shape>
+    </item>
+
+</ripple>
+
