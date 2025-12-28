@@ -3,7 +3,6 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.content.ContentValues
 import android.database.Cursor
-import kotlin.text.insert
 
 
 class LogBookDatabaseHelper(context: Context) :
@@ -13,6 +12,7 @@ class LogBookDatabaseHelper(context: Context) :
         private const val DATABASE_NAME = "LogBooks.db"
         private const val DATABASE_VERSION = 1
     }
+
 
     override fun onCreate(db: SQLiteDatabase) {
         // We will handle table creation dynamically (see method below)
@@ -41,6 +41,214 @@ class LogBookDatabaseHelper(context: Context) :
 
         db.execSQL(createTableSQL)
     }
+    fun recreateTimelineTable() {
+        val db = writableDatabase
+        val timelineTable = "timeline97531"
+
+        db.execSQL("DROP TABLE IF EXISTS $timelineTable")
+
+        db.execSQL("""
+        CREATE TABLE $timelineTable (
+            Entry_Unique_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+            FirstEntryDate TEXT,
+            FirstTimeStamp TEXT,
+            Linked_ID INTEGER,
+            EntryType TEXT,
+            TaskStat TEXT,
+            Filepath TEXT,
+            TextTask TEXT,
+            Note TEXT,
+            DeleteStat INTEGER,
+            LogbookName TEXT
+        );
+    """.trimIndent())
+
+        val tables = mutableListOf<String>()
+        val cursor = db.rawQuery(
+            "SELECT name FROM sqlite_master WHERE type='table' " +
+                    "AND name NOT LIKE 'android_metadata' " +
+                    "AND name NOT LIKE 'sqlite_sequence' " +
+                    "AND name NOT LIKE 'timeline97531' " +
+                    "AND name NOT LIKE 'allpendingtasks97531' " +
+                    "AND name NOT LIKE 'allcompletedtasks97531'",
+            null
+        )
+        while (cursor.moveToNext()) {
+            val name = cursor.getString(0)
+            if (name == timelineTable) continue
+            tables.add(name)
+        }
+        cursor.close()
+
+        // Build UNION query to fetch and sort all tables at once
+        val unionQueries = tables.mapIndexed { idx, src ->
+            "SELECT FirstEntryDate, FirstTimeStamp, Linked_ID, EntryType, TaskStat, Filepath, TextTask, Note, DeleteStat, '$src' as LogbookName " +
+                    "FROM $src WHERE DeleteStat = 0" +
+                    (if (idx < tables.size - 1) " UNION ALL " else "")
+        }.joinToString("")
+
+        db.execSQL("""
+        INSERT INTO $timelineTable
+        (FirstEntryDate, FirstTimeStamp, Linked_ID, EntryType, TaskStat, Filepath, TextTask, Note, DeleteStat, LogbookName)
+        $unionQueries
+        ORDER BY FirstEntryDate ASC, FirstTimeStamp ASC
+    """.trimIndent())
+
+        db.close()
+    }
+
+
+    fun getTimelineEntriesWithLimit(tableName: String, limit: Int, offset: Int): List<DiaryEntry> {
+        val entries = mutableListOf<DiaryEntry>()
+        val db = readableDatabase
+
+        val cursor = db.rawQuery(
+            """
+        SELECT * FROM $tableName 
+        WHERE DeleteStat = 0
+        ORDER BY FirstEntryDate ASC, FirstTimeStamp ASC
+        LIMIT $limit OFFSET $offset
+        """.trimIndent(),
+            null
+        )
+
+        while (cursor.moveToNext()) {
+            val entry = DiaryEntry(
+                entryUniqueId = cursor.getLong(cursor.getColumnIndexOrThrow("Entry_Unique_ID")),
+                firstEntryDate = cursor.getString(cursor.getColumnIndexOrThrow("FirstEntryDate")),
+                firstTimeStamp = cursor.getString(cursor.getColumnIndexOrThrow("FirstTimeStamp")),
+                linkedId = if (cursor.isNull(cursor.getColumnIndexOrThrow("Linked_ID"))) null else cursor.getLong(cursor.getColumnIndexOrThrow("Linked_ID")),
+                entryType = cursor.getString(cursor.getColumnIndexOrThrow("EntryType")),
+                taskStat = cursor.getString(cursor.getColumnIndexOrThrow("TaskStat")),
+                filepath = cursor.getString(cursor.getColumnIndexOrThrow("Filepath")),
+                textTask = cursor.getString(cursor.getColumnIndexOrThrow("TextTask")),
+                note = cursor.getString(cursor.getColumnIndexOrThrow("Note")),
+                deleteStat = cursor.getInt(cursor.getColumnIndexOrThrow("DeleteStat")) != 0,
+                logbookName = cursor.getString(cursor.getColumnIndexOrThrow("LogbookName")) ?: ""
+            )
+            entries.add(entry)
+        }
+        cursor.close()
+        db.close()
+        return entries
+    }
+
+    fun recreateAllPendingTasksTable() {
+        val db = writableDatabase
+        val tableName = "allpendingtasks97531"
+
+        db.execSQL("DROP TABLE IF EXISTS $tableName")
+
+        db.execSQL("""
+        CREATE TABLE $tableName (
+            Entry_Unique_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+            FirstEntryDate TEXT,
+            FirstTimeStamp TEXT,
+            Linked_ID INTEGER,
+            EntryType TEXT,
+            TaskStat TEXT,
+            Filepath TEXT,
+            TextTask TEXT,
+            Note TEXT,
+            DeleteStat INTEGER,
+            LogbookName TEXT
+        );
+    """.trimIndent())
+
+        // get all user tables except meta / helper ones
+        val tables = mutableListOf<String>()
+        val cursor = db.rawQuery(
+            "SELECT name FROM sqlite_master WHERE type='table' " +
+                    "AND name NOT LIKE 'android_metadata' " +
+                    "AND name NOT LIKE 'sqlite_sequence' " +
+                    "AND name NOT LIKE 'timeline97531' " +
+                    "AND name NOT LIKE 'allpendingtasks97531' " +
+                    "AND name NOT LIKE 'allcompletedtasks97531'",
+            null
+        )
+        while (cursor.moveToNext()) {
+            tables.add(cursor.getString(0))
+        }
+        cursor.close()
+
+        if (tables.isNotEmpty()) {
+            val unionQueries = tables.mapIndexed { idx, src ->
+                "SELECT FirstEntryDate, FirstTimeStamp, Linked_ID, EntryType, TaskStat, Filepath, TextTask, Note, DeleteStat, '$src' as LogbookName " +
+                        "FROM $src " +
+                        "WHERE DeleteStat = 0 AND EntryType = 'TASK' AND (TaskStat IS NULL OR TaskStat = 'TODO' OR TaskStat = 'false')" +
+                        (if (idx < tables.size - 1) " UNION ALL " else "")
+            }.joinToString("")
+
+            db.execSQL("""
+            INSERT INTO $tableName
+            (FirstEntryDate, FirstTimeStamp, Linked_ID, EntryType, TaskStat, Filepath, TextTask, Note, DeleteStat, LogbookName)
+            $unionQueries
+            ORDER BY FirstEntryDate ASC, FirstTimeStamp ASC
+        """.trimIndent())
+        }
+
+        db.close()
+    }
+
+    fun recreateAllCompletedTasksTable() {
+        val db = writableDatabase
+        val tableName = "allcompletedtasks97531"
+
+        db.execSQL("DROP TABLE IF EXISTS $tableName")
+
+        db.execSQL("""
+        CREATE TABLE $tableName (
+            Entry_Unique_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+            FirstEntryDate TEXT,
+            FirstTimeStamp TEXT,
+            Linked_ID INTEGER,
+            EntryType TEXT,
+            TaskStat TEXT,
+            Filepath TEXT,
+            TextTask TEXT,
+            Note TEXT,
+            DeleteStat INTEGER,
+            LogbookName TEXT
+        );
+    """.trimIndent())
+
+        val tables = mutableListOf<String>()
+        val cursor = db.rawQuery(
+            "SELECT name FROM sqlite_master WHERE type='table' " +
+                    "AND name NOT LIKE 'android_metadata' " +
+                    "AND name NOT LIKE 'sqlite_sequence' " +
+                    "AND name NOT LIKE 'timeline97531' " +
+                    "AND name NOT LIKE 'allpendingtasks97531' " +
+                    "AND name NOT LIKE 'allcompletedtasks97531'",
+            null
+        )
+        while (cursor.moveToNext()) {
+            tables.add(cursor.getString(0))
+        }
+        cursor.close()
+
+        if (tables.isNotEmpty()) {
+            val unionQueries = tables.mapIndexed { idx, src ->
+                "SELECT FirstEntryDate, FirstTimeStamp, Linked_ID, EntryType, TaskStat, Filepath, TextTask, Note, DeleteStat, '$src' as LogbookName " +
+                        "FROM $src " +
+                        "WHERE DeleteStat = 0 AND EntryType = 'TASK' AND (TaskStat = 'DONE' OR TaskStat = 'true')" +
+                        (if (idx < tables.size - 1) " UNION ALL " else "")
+            }.joinToString("")
+
+            db.execSQL("""
+            INSERT INTO $tableName
+            (FirstEntryDate, FirstTimeStamp, Linked_ID, EntryType, TaskStat, Filepath, TextTask, Note, DeleteStat, LogbookName)
+            $unionQueries
+            ORDER BY FirstEntryDate ASC, FirstTimeStamp ASC
+        """.trimIndent())
+        }
+
+        db.close()
+    }
+
+
+
+
     fun insertDiaryEntry(
         tableName: String,
         textTask: String,
@@ -73,7 +281,7 @@ class LogBookDatabaseHelper(context: Context) :
             null, // all columns
             "DeleteStat = 0", // skip deleted entries
             null, null, null,
-            "Entry_Unique_ID ASC" // newest first
+            "Entry_Unique_ID ASC"
         )
 
         while (cursor.moveToNext()) {
@@ -87,16 +295,17 @@ class LogBookDatabaseHelper(context: Context) :
                 filepath = cursor.getString(cursor.getColumnIndexOrThrow("Filepath")),
                 textTask = cursor.getString(cursor.getColumnIndexOrThrow("TextTask")),
                 note = cursor.getString(cursor.getColumnIndexOrThrow("Note")),
-                deleteStat = cursor.getInt(cursor.getColumnIndexOrThrow("DeleteStat")) != 0
+                deleteStat = cursor.getInt(cursor.getColumnIndexOrThrow("DeleteStat")) != 0,
+                logbookName = cursor.getString(cursor.getColumnIndexOrThrow("LogbookName")) ?: ""  // add this
             )
             entries.add(entry)
         }
         cursor.close()
         db.close()
         return entries
-
     }
-    fun getAllDiaryTableNames(): List<String> {
+
+    fun getAllDiaryTableNamed(): List<String> {
         val tableNames = mutableListOf<String>()
         val db = readableDatabase
         val cursor = db.rawQuery(
@@ -110,6 +319,30 @@ class LogBookDatabaseHelper(context: Context) :
         db.close()
         return tableNames
     }
+    fun getAllDiaryTableNames(): List<String> {
+        val tableNames = mutableListOf<String>()
+        val db = readableDatabase
+        val cursor = db.rawQuery(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'android_metadata' AND name NOT LIKE 'sqlite_sequence'",
+            null
+        )
+        while (cursor.moveToNext()) {
+            val name = cursor.getString(0)
+            // Skip internal tables
+            if (name == "android_metadata") continue
+            if (name == "sqlite_sequence") continue
+            if (name == "timeline97531") continue
+            if (name == "allpendingtasks97531") continue
+            if (name == "allcompletedtasks97531") continue
+
+            // later you can add more: if (name.startsWith("_sys_")) continue
+            tableNames.add(name)
+        }
+        cursor.close()
+        db.close()
+        return tableNames
+    }
+
 
     fun updateDiaryEntryText(tableName: String, entryUniqueId: Long, newText: String) {
         val db = writableDatabase
@@ -201,16 +434,78 @@ class LogBookDatabaseHelper(context: Context) :
     fun getEntriesInDateRange(tableName: String, startDate: String, endDate: String): List<DiaryEntry> {
         val entries = mutableListOf<DiaryEntry>()
         val db = readableDatabase
+
         val cursor = db.rawQuery(
-            "SELECT * FROM $tableName WHERE FirstEntryDate BETWEEN ? AND ? ORDER BY FirstEntryDate ASC, FirstTimeStamp ASC",
-            arrayOf(startDate, endDate))
+            "SELECT * FROM $tableName WHERE DeleteStat = 0 AND FirstEntryDate BETWEEN ? AND ? ORDER BY FirstEntryDate ASC, FirstTimeStamp ASC",
+            arrayOf(startDate, endDate)
+        )
+
         while (cursor.moveToNext()) {
-            entries.add(getDiaryEntryFromCursor(cursor))
+            val entry = DiaryEntry(
+                entryUniqueId = cursor.getLong(cursor.getColumnIndexOrThrow("Entry_Unique_ID")),
+                firstEntryDate = cursor.getString(cursor.getColumnIndexOrThrow("FirstEntryDate")),
+                firstTimeStamp = cursor.getString(cursor.getColumnIndexOrThrow("FirstTimeStamp")),
+                linkedId = if (cursor.isNull(cursor.getColumnIndexOrThrow("Linked_ID"))) null
+                else cursor.getLong(cursor.getColumnIndexOrThrow("Linked_ID")),
+                entryType = cursor.getString(cursor.getColumnIndexOrThrow("EntryType")),
+                taskStat = cursor.getString(cursor.getColumnIndexOrThrow("TaskStat")),
+                filepath = cursor.getString(cursor.getColumnIndexOrThrow("Filepath")),
+                textTask = cursor.getString(cursor.getColumnIndexOrThrow("TextTask")),
+                note = cursor.getString(cursor.getColumnIndexOrThrow("Note")),
+                deleteStat = cursor.getInt(cursor.getColumnIndexOrThrow("DeleteStat")) != 0
+            )
+            entries.add(entry)
         }
+
         cursor.close()
         db.close()
         return entries
     }
+
+    fun getTimelineEntriesForDateRange(startDate: String, endDate: String): List<TimelineEntry> {
+        val entries = mutableListOf<TimelineEntry>()
+        val db = readableDatabase
+
+        val cursor = db.rawQuery(
+            "SELECT * FROM timeline97531 WHERE FirstEntryDate BETWEEN ? AND ? ORDER BY FirstEntryDate ASC, FirstTimeStamp ASC",
+            arrayOf(startDate, endDate)
+        )
+
+        while (cursor.moveToNext()) {
+            entries.add(
+                TimelineEntry(
+                    entryUniqueId = cursor.getLong(cursor.getColumnIndexOrThrow("Entry_Unique_ID")),
+                    logbookName = cursor.getString(cursor.getColumnIndexOrThrow("LogbookName")),
+                    firstEntryDate = cursor.getString(cursor.getColumnIndexOrThrow("FirstEntryDate")),
+                    firstTimeStamp = cursor.getString(cursor.getColumnIndexOrThrow("FirstTimeStamp")),
+                    entryType = cursor.getString(cursor.getColumnIndexOrThrow("EntryType")),
+                    taskStat = cursor.getString(cursor.getColumnIndexOrThrow("TaskStat")),
+                    filepath = cursor.getString(cursor.getColumnIndexOrThrow("Filepath")),
+                    textTask = cursor.getString(cursor.getColumnIndexOrThrow("TextTask")),
+                    note = cursor.getString(cursor.getColumnIndexOrThrow("Note"))
+                )
+            )
+        }
+
+        cursor.close()
+        db.close()
+        return entries
+    }
+
+
+    data class TimelineEntry(
+        val entryUniqueId: Long,
+        val logbookName: String,
+        val firstEntryDate: String,
+        val firstTimeStamp: String,
+        val entryType: String,
+        val filepath: String?,
+        val textTask: String?,
+        val note: String?,
+        val taskStat: String?
+    )
+
+
     fun getAllEntriesWithLimit(tableName: String, limit: Int = 1000): List<DiaryEntry> {
         val entries = mutableListOf<DiaryEntry>()
         val db = readableDatabase
@@ -250,7 +545,7 @@ class LogBookDatabaseHelper(context: Context) :
 
     private fun getDiaryEntryFromCursor(cursor: Cursor): DiaryEntry {
         return DiaryEntry(
-            entryUniqueId = cursor.getLong(cursor.getColumnIndexOrThrow("EntryUniqueID")),
+            entryUniqueId = cursor.getLong(cursor.getColumnIndexOrThrow("entryUniqueId")),
             firstEntryDate = cursor.getString(cursor.getColumnIndexOrThrow("FirstEntryDate")),
             firstTimeStamp = cursor.getString(cursor.getColumnIndexOrThrow("FirstTimeStamp")),
             linkedId = if (cursor.isNull(cursor.getColumnIndexOrThrow("LinkedID"))) null

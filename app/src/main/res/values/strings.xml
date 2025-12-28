@@ -1,3 +1,113 @@
 <resources>
     <string name="app_name">OneLogs</string>
+    <string name="privacy_policy_onelogs">
+    <![CDATA[
+Privacy Policy for OneLogs
+
+Effective Date: 26-12-2025
+
+1. Introduction
+OneLogs (“the app”) is a personal diary and logging application designed to help users record daily thoughts, tasks, and personal notes on their Android devices.
+Your privacy is important. This Privacy Policy explains how OneLogs handles user data and aligns with Google Play’s User Data and Transparency policies.
+
+2. App Audience
+OneLogs is intended for general audiences.
+It is not specifically directed at children and does not knowingly collect personal information from children beyond what is required for normal app usage.
+
+3. Data We Collect
+3.1 User-Provided Content
+OneLogs collects and stores only the information you voluntarily enter into the app, such as:
+Diary entries and notes
+Titles, tags, timestamps
+Tasks or logs you create
+This content is referred to as user content.
+
+3.2 Device and Technical Information
+The app may process limited technical information required for core functionality and stability, such as:
+Device model
+Android version
+App crash or error logs
+
+This data is typically handled by the Android operating system and is not collected or stored by the developer in a personally identifiable manner.
+
+3.3 No Account or Direct Identifiers
+OneLogs does not require:
+Account creation
+Name, email address, phone number
+Any online profile or login
+All core features work offline.
+
+4. How Your Data Is Stored
+By default, all user content is stored locally on your device in the app’s private storage or local database.
+Other apps cannot access this data without system-level permissions or rooting.
+If you enable Android system backups (such as Google Drive backup), app data may be included according to your device and Google account settings.
+
+5. How Your Data Is Used
+Your data is used only to provide core functionality, including:
+Creating and editing entries
+Searching, filtering, and organizing logs
+Generating local statistics or reminders
+Exporting your data when you choose
+All processing happens locally on your device unless you explicitly export or share data.
+
+6. Data Sharing and Transfers
+OneLogs does not sell, rent, or share your personal data or diary content with third parties.
+The app does not include advertising SDKs that read or analyze your content.
+The developer does not receive your diary entries or exported files.
+If you export or share data (e.g., to email, cloud storage, or another app), the destination service will handle that data under its own privacy policy.
+
+7. Export and Deletion
+7.1 Export
+OneLogs allows you to export your data in structured formats (such as text, CSV, or JSON) for backup or transfer purposes.
+You are responsible for securing any exported files.
+
+7.2 Deletion
+You can delete individual entries or clear app data using in-app options where and as available.
+Uninstalling the app generally removes locally stored data from private app storage.
+Exported or shared copies stored elsewhere are not automatically deleted.
+
+8. Permissions
+OneLogs requests only the minimum permissions necessary for its functionality.
+Each permission request includes a clear, in-app explanation of:
+Camera
+What the permission is used for: for capturing and storing images
+Why it is needed: this allows users to do image based logging
+Gallery & Image access
+What the permission is used for: Allowing users to select images from their gallery
+Why it is needed: this allows users to do image based logging
+
+Sensitive permissions (such as microphone, location, contacts, SMS) are not required unless explicitly introduced and explained in a future update.
+
+9. Security
+OneLogs relies on Android’s built-in security features, including:
+App sandboxing
+Private storage isolation
+While reasonable measures are used to protect your data, no system can guarantee absolute security. Users are encouraged to use device-level protections such as screen locks, encryption, and secure backups.
+
+10. Third-Party Services
+Currently, OneLogs does not integrate third-party analytics, advertising, or cloud services that access user content.
+If optional third-party services are added in the future (such as analytics, crash reporting, or cloud sync), this Privacy Policy will be updated to clearly describe:
+What data is involved
+How it is used
+Which third parties are involved
+All integrations will comply with Google Play policies.
+
+11. AI-Assisted Policy Disclosure
+This Privacy Policy was drafted with assistance from AI tools based on developer-provided information and Google Play policy guidance.
+The developer of OneLogs remains fully responsible for the app’s behavior and data handling practices.
+
+12. Changes to This Policy
+This Privacy Policy may be updated to reflect:
+App feature changes
+Legal or platform requirement updates
+When significant changes occur, the updated policy will be made available through the Google Play listing and/or within the app.
+
+13. Contact
+For privacy-related questions or requests, contact the developer using the contact information provided on the Google Play store listing.
+Requests related to access, correction, or deletion of data will be handled where technically feasible and in accordance with applicable laws.    ]]>
+</string>
+
+
+
+
 </resources>

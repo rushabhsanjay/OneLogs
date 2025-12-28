@@ -3,21 +3,18 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
+    android:id="@+id/timeline_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/md_theme_dark_onPrimary"
-    tools:context=".MainActivity">
+    tools:context=".TimelineActivity">
 
-    <!-- App bar (unchanged) -->
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/md_theme_dark_surface"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent">
+        app:layout_constraintTop_toTopOf="parent">
 
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
@@ -28,27 +25,25 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="start"
-                android:text="OneLogs"
+                android:text="Global Tasks"
                 android:textColor="@color/md_theme_dark_onSurface"
                 android:textSize="20sp"
-                android:textStyle="bold"
-                tools:ignore="HardcodedText" />
-
-            <ImageButton
-                android:id="@+id/moreMenuButton"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:layout_gravity="end|center_vertical"
-                android:layout_marginEnd="4dp"
-                android:background="@color/md_theme_dark_surface"
-                android:src="@drawable/ic_moremenu"
-                android:contentDescription="More options"
-                android:padding="8dp"
-                app:tint="@color/md_theme_dark_primary" />
+                android:textStyle="bold" />
         </androidx.appcompat.widget.Toolbar>
     </com.google.android.material.appbar.AppBarLayout>
 
-    <!-- Bottom navigation bar -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/timelineRecyclerView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:padding="4dp"
+        android:clipToPadding="false"
+        app:layout_constraintTop_toBottomOf="@id/appBarLayout"
+        app:layout_constraintBottom_toTopOf="@id/bottomNavBar"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        tools:listitem="@layout/item_timeline_layout" />
+
     <!-- Bottom navigation bar -->
     <LinearLayout
         android:id="@+id/bottomNavBar"
@@ -63,22 +58,21 @@
 
         <!-- Logbooks -->
         <LinearLayout
+            android:id="@+id/navLogbooks"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:background="@color/md_theme_dark_primaryContainer"
             android:orientation="vertical"
             android:gravity="center">
 
             <ImageButton
-                android:id="@+id/navLogbooks"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:background="@android:color/transparent"
                 android:src="@drawable/ic_logbooks"
                 android:contentDescription="Logbooks"
                 android:scaleType="centerInside"
-                app:tint="@color/md_theme_dark_onSurface" />
+                app:tint="@color/md_theme_dark_primary" />
 
             <TextView
                 android:id="@+id/navLogbooksLabel"
@@ -86,7 +80,7 @@
                 android:layout_height="wrap_content"
                 android:text="Logbooks"
                 android:textSize="10sp"
-                android:textColor="@color/md_theme_dark_onSurface" />
+                android:textColor="@color/md_theme_dark_primary" />
         </LinearLayout>
 
         <!-- Timeline -->
@@ -95,6 +89,7 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
+
             android:orientation="vertical"
             android:gravity="center">
 
@@ -118,21 +113,22 @@
 
         <!-- All Tasks -->
         <LinearLayout
-            android:id="@+id/navAllTasks"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
+            android:background="@color/md_theme_dark_primaryContainer"
             android:orientation="vertical"
             android:gravity="center">
 
             <ImageButton
+                android:id="@+id/navAllTasks"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:background="@android:color/transparent"
                 android:src="@drawable/ic_alltasks"
                 android:contentDescription="All Tasks"
                 android:scaleType="centerInside"
-                app:tint="@color/md_theme_dark_primary" />
+                app:tint="@color/md_theme_dark_onSurface" />
 
             <TextView
                 android:id="@+id/navAllTasksLabel"
@@ -140,7 +136,7 @@
                 android:layout_height="wrap_content"
                 android:text="All Tasks"
                 android:textSize="10sp"
-                android:textColor="@color/md_theme_dark_primary" />
+                android:textColor="@color/md_theme_dark_onSurface" />
         </LinearLayout>
 
         <!-- Bookmarks -->
@@ -170,38 +166,5 @@
                 android:textColor="@color/md_theme_dark_primary" />
         </LinearLayout>
     </LinearLayout>
-
-
-    <!-- RecyclerView now constrained above bottom nav -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/logBooksRecyclerView"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintTop_toBottomOf="@+id/appBarLayout"
-        app:layout_constraintBottom_toTopOf="@+id/bottomNavBar"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        android:paddingTop="4dp"
-        android:paddingBottom="8dp"
-        android:paddingStart="4dp"
-        android:paddingEnd="4dp"
-        android:clipToPadding="false"
-        tools:listitem="@layout/item_logbook" />
-
-    <!-- Floating add button (unchanged) -->
-    <ImageButton
-        android:id="@+id/addbutton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="68dp"
-        android:background="@drawable/bg_add_button"
-        android:contentDescription="Add Log"
-        android:padding="3dp"
-        android:scaleType="centerInside"
-        android:src="@drawable/addbutton"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        tools:ignore="HardcodedText" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

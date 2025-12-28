@@ -36,20 +36,27 @@ class LogBookDetailActivity : AppCompatActivity() {
 
     private var cameraImagePath: String? = null
     private val CAMERA_REQUEST_CODE = 1001
-
+    private val GALLERY_REQUEST_CODE = 1002
     private var searching = false
     var isReplyMode = false
     var replyModeLinkedId: Long? = null
 
     // Toolbar/UI
     lateinit var toolbarTitle: TextView
-    lateinit var replyModeText: TextView
+    //lateinit var replyModeText: TextView
     lateinit var searchButton: ImageButton
     lateinit var cancelSearchButton: ImageButton
     lateinit var pendingButton: ImageButton
     lateinit var cancelPendingButton: ImageButton
     lateinit var chainViewModeTitle: TextView
     lateinit var chainCancelButton: ImageButton
+    lateinit var replyBar: View
+    lateinit var replyBarTitle: TextView
+    lateinit var replyBarCancel: ImageButton
+    lateinit var replyDivider: View
+    var isPendingMode = false
+    var isChainMode = false
+
 
     // Recycler
     private lateinit var recyclerAdapter: DiaryEntryRecyclerAdapter
@@ -103,61 +110,151 @@ class LogBookDetailActivity : AppCompatActivity() {
     }
 
 
-    fun setChainViewMode(enabled: Boolean) {
-        chainViewModeTitle.visibility = if (enabled) View.VISIBLE else View.GONE
-        toolbarTitle.visibility = if (enabled) View.GONE else View.VISIBLE
-        cancelSearchButton.visibility = if (enabled) View.VISIBLE else View.GONE
-
-        searchButton.visibility = if (enabled) View.GONE else View.VISIBLE
-        pendingButton.visibility = if (enabled) View.GONE else View.VISIBLE
-        cancelPendingButton.visibility = if (enabled) View.GONE else View.VISIBLE
-    }
 
 
-    fun activateChainViewMode(swipedEntryId: Int) {
-        setChainViewMode(true)
 
-        val chainIds = findChainForEntry(swipedEntryId)
-        val allEntries = dbHelper.getLastNEntries(tableName, 150)
 
-        val filtered = allEntries.filter {
-            chainIds.contains(it.entryUniqueId.toInt())
-        }
-
-        recyclerAdapter.update(filtered)
-
-        val idx = filtered.indexOfFirst {
-            it.entryUniqueId.toInt() == swipedEntryId
-        }
-        if (idx >= 0) entryRecyclerView.scrollToPosition(idx)
-    }
 
 
     // ========= REPLY MODE =========
     fun showReplyToolbar(entry: DiaryEntry) {
-        toolbarTitle.visibility = View.GONE
-        replyModeText.visibility = View.VISIBLE
-        replyModeText.text = "Reply Mode"
-
-        pendingButton.visibility = View.GONE
-        cancelPendingButton.visibility = View.GONE
-        searchButton.visibility = View.GONE
-        cancelSearchButton.visibility = View.VISIBLE
+        replyBar.visibility = View.VISIBLE
+        replyDivider.visibility = View.VISIBLE
+        replyBarTitle.text = "Replying to: " + (entry.textTask ?: "").take(40)
+        replyBarCancel.setOnClickListener {
+            exitReplyMode()
+        }
     }
+
 
 
     fun exitReplyMode() {
         isReplyMode = false
         replyModeLinkedId = null
 
-        replyModeText.visibility = View.GONE
-        toolbarTitle.visibility = View.VISIBLE
+        replyBar.visibility = View.GONE
+        replyDivider.visibility = View.GONE
+    }
 
+
+    fun enterPendingMode() {
+        isPendingMode = true
+        pendingButton.visibility = View.GONE
+        cancelPendingButton.visibility = View.VISIBLE
+
+        val filtered = dbHelper.getLastNEntries(tableName, 150).filter { e ->
+            e.entryType == "TASK" && (
+                    e.taskStat == null ||
+                            e.taskStat.lowercase() == "todo" ||
+                            e.taskStat.lowercase() == "incomplete" ||
+                            e.taskStat == "0" ||
+                            e.taskStat.lowercase() == "false"
+                    )
+        }
+        recyclerAdapter.update(filtered)
+    }
+
+    fun exitPendingMode() {
+        isPendingMode = false
+        cancelPendingButton.visibility = View.GONE
+        pendingButton.visibility = View.VISIBLE
+        refreshEntries(tableName)
+    }
+    fun setChainViewMode(enabled: Boolean) {
+        isChainMode = enabled
+        chainViewModeTitle.visibility = if (enabled) View.VISIBLE else View.GONE
+        toolbarTitle.visibility = if (enabled) View.GONE else View.VISIBLE
+        cancelSearchButton.visibility = if (enabled) View.VISIBLE else View.GONE
+
+        searchButton.visibility = if (enabled) View.GONE else View.VISIBLE
+        pendingButton.visibility = if (enabled) View.GONE else View.VISIBLE
+    }
+    private fun findConnectedChainIds(
+        allEntries: List<DiaryEntry>,
+        swipedEntryId: Int
+    ): Set<Int> {
+        // Build adjacency list: id -> neighbors
+        val neighbors = mutableMapOf<Int, MutableSet<Int>>()
+
+        fun connect(a: Int, b: Int) {
+            neighbors.getOrPut(a) { mutableSetOf() }.add(b)
+            neighbors.getOrPut(b) { mutableSetOf() }.add(a)
+        }
+
+        // Build edges from entryUniqueId <-> linkedId (both directions)
+        for (entry in allEntries) {
+            val id = entry.entryUniqueId.toInt()
+            val linked = entry.linkedId?.toInt()
+            if (linked != null && linked != 0 && linked != id) {
+                connect(id, linked)
+            }
+        }
+
+        // BFS/DFS from swipedEntryId to get whole connected component
+        val visited = mutableSetOf<Int>()
+        val stack = ArrayDeque<Int>()
+        stack.add(swipedEntryId)
+
+        while (stack.isNotEmpty()) {
+            val current = stack.removeLast()
+            if (!visited.add(current)) continue
+
+            neighbors[current]?.forEach { neigh ->
+                if (!visited.contains(neigh)) {
+                    stack.add(neigh)
+                }
+            }
+        }
+
+        return visited
+    }
+
+
+    fun activateChainViewMode(swipedEntryId: Int) {
+        setChainViewMode(true)
+
+        // Load some window of entries (like you already do)
+        val allEntries = dbHelper.getLastNEntries(tableName, 150)
+
+        // Find all connected ids using graph traversal
+        val chainIds = findConnectedChainIds(allEntries, swipedEntryId)
+
+        val filtered = allEntries.filter { entry ->
+            chainIds.contains(entry.entryUniqueId.toInt())
+        }
+
+        recyclerAdapter.update(filtered)
+
+        val idx = filtered.indexOfFirst { it.entryUniqueId.toInt() == swipedEntryId }
+        if (idx >= 0) entryRecyclerView.scrollToPosition(idx)
+    }
+
+
+    fun exitChainViewMode() {
+        if (!isChainMode) return
+        setChainViewMode(false)
+        refreshEntries(tableName)
+        entryRecyclerView.scrollToPosition(recyclerAdapter.itemCount - 1)
+    }
+
+    fun enterSearchMode() {
+        searching = true
+        toolbarTitle.visibility = View.GONE
+        searchButton.visibility = View.GONE
+        cancelSearchButton.visibility = View.VISIBLE
+        // searchInputBar visibility & focus handled in onCreate where you have access to it
+    }
+
+    fun exitSearchMode(searchInputBar: EditText) {
+        searching = false
+        searchInputBar.visibility = View.GONE
         searchButton.visibility = View.VISIBLE
         cancelSearchButton.visibility = View.GONE
-        pendingButton.visibility = View.VISIBLE
-        cancelPendingButton.visibility = View.GONE
+        toolbarTitle.visibility = View.VISIBLE
+        searchInputBar.text.clear()
+        refreshEntries(tableName)
     }
+
 
     // Add this function inside LogBookDetailActivity
     fun handleReplyLinkAction(entry: DiaryEntry) {
@@ -171,22 +268,50 @@ class LogBookDetailActivity : AppCompatActivity() {
         // e.g., dbHelper.linkDiaryEntry(tableName, entry.entryUniqueId, replyModeLinkedId)
         Toast.makeText(this, "Linked/Reassigned entry!", Toast.LENGTH_SHORT).show()
         refreshEntries(tableName) // refresh RecyclerView
+        exitReplyMode()
+    }
+
+    private fun RecyclerView.isNearBottom(threshold: Int = 3): Boolean {
+        val lm = layoutManager as? LinearLayoutManager ?: return false
+        val lastVisible = lm.findLastVisibleItemPosition()
+        val total = adapter?.itemCount ?: return false
+        return lastVisible >= (total - 1 - threshold)
     }
 
     // ========= ANDROID ONCREATE =========
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_log_book_detail)
+        replyBar = findViewById(R.id.replyBar)
+        replyBarTitle = findViewById(R.id.replyBarTitle)
+        replyBarCancel = findViewById(R.id.replyBarCancel)
+        replyDivider = findViewById(R.id.replyDivider)
+
 
         // Insets → avoid overlaps
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
         WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        var lastImeInset = 0
+
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, ins ->
             val ime = ins.getInsets(WindowInsetsCompat.Type.ime()).bottom
             val nav = ins.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
             v.setPadding(v.paddingLeft, v.paddingTop, v.paddingRight, maxOf(ime, nav))
+
+            // POC: keyboard just opened
+            if (ime > 0 && lastImeInset == 0) {
+                if (entryRecyclerView.isNearBottom()) {
+                    entryRecyclerView.post {
+                        entryRecyclerView.scrollToPosition(recyclerAdapter.itemCount - 1)
+                    }
+                }
+            }
+            lastImeInset = ime
+
             ins
         }
+
 
         window.statusBarColor = ContextCompat.getColor(this, R.color.md_theme_dark_onPrimary)
         WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = false
@@ -203,7 +328,7 @@ class LogBookDetailActivity : AppCompatActivity() {
 
         // ===== Toolbar =====
         toolbarTitle = findViewById(R.id.toolbarTitle)
-        replyModeText = findViewById(R.id.replyModeText)
+        //replyModeText = findViewById(R.id.replyModeText)
         pendingButton = findViewById(R.id.pendingButton)
         cancelPendingButton = findViewById(R.id.cancelPendingButton)
         searchButton = findViewById(R.id.searchButton)
@@ -223,6 +348,7 @@ class LogBookDetailActivity : AppCompatActivity() {
         // ===== RecyclerView =====
         entryRecyclerView = findViewById(R.id.entryRecyclerView)
         entryRecyclerView.layoutManager = LinearLayoutManager(this)
+
 
         val entries = dbHelper.getLastNEntries(tableName, 150)
         recyclerAdapter = DiaryEntryRecyclerAdapter(entries)
@@ -274,62 +400,33 @@ class LogBookDetailActivity : AppCompatActivity() {
 
         // ========= PENDING FILTER =========
         pendingButton.setOnClickListener {
-            pendingButton.visibility = View.GONE
-            cancelPendingButton.visibility = View.VISIBLE
-
-            val filtered = dbHelper.getLastNEntries(tableName, 150).filter { e ->
-                e.entryType == "TASK" && (
-                        e.taskStat == null ||
-                                e.taskStat.lowercase() == "todo" ||
-                                e.taskStat.lowercase() == "incomplete" ||
-                                e.taskStat == "0" ||
-                                e.taskStat.lowercase() == "false"
-                        )
-            }
-            recyclerAdapter.update(filtered)
+            enterPendingMode()
         }
 
         cancelPendingButton.setOnClickListener {
-            cancelPendingButton.visibility = View.GONE
-            pendingButton.visibility = View.VISIBLE
-            refreshEntries(tableName)
+            exitPendingMode()
         }
 
 
         // ========= SEARCH =========
         searchButton.setOnClickListener {
-            toolbarTitle.visibility = View.GONE
+            enterSearchMode()
             searchInputBar.visibility = View.VISIBLE
-            cancelSearchButton.visibility = View.VISIBLE
-            searchButton.visibility = View.GONE
             searchInputBar.requestFocus()
         }
 
         cancelSearchButton.setOnClickListener {
 
-            // 1) Exit REPLY first
-            if (isReplyMode) {
-                exitReplyMode()
-                return@setOnClickListener
-            }
-
             // 2) Exit CHAIN mode
-            if (chainViewModeTitle.visibility == View.VISIBLE) {
-                setChainViewMode(false)
-                refreshEntries(tableName)
-                entryRecyclerView.scrollToPosition(recyclerAdapter.itemCount - 1)
+            if (isChainMode) {
+                exitChainViewMode()
                 return@setOnClickListener
             }
 
             // 3) Exit SEARCH mode
-            searching = false
-            searchInputBar.visibility = View.GONE
-            searchButton.visibility = View.VISIBLE
-            cancelSearchButton.visibility = View.GONE
-            toolbarTitle.visibility = View.VISIBLE
-            searchInputBar.text.clear()
-            refreshEntries(tableName)
+            exitSearchMode(searchInputBar)
         }
+
 
 
         searchInputBar.addTextChangedListener(object : TextWatcher {
@@ -395,6 +492,13 @@ class LogBookDetailActivity : AppCompatActivity() {
             override fun onTextChanged(s: CharSequence?, st: Int, b: Int, c: Int) {}
         })
 
+        attach.setOnClickListener {
+            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type = "image/*"
+            }
+            startActivityForResult(intent, GALLERY_REQUEST_CODE)
+        }
 
         // Send
         sendButton.setOnClickListener {
@@ -436,11 +540,10 @@ class LogBookDetailActivity : AppCompatActivity() {
         super.onActivityResult(req, res, data)
 
         if (req == CAMERA_REQUEST_CODE && res == RESULT_OK && cameraImagePath != null) {
-
+            // existing camera logic (unchanged)
             val file = java.io.File(cameraImagePath!!)
             val uri = Uri.fromFile(file)
 
-            // ✅ CORRECT media scanner broadcast (no .apply {}, no "data =")
             val scanIntent = Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, uri)
             sendBroadcast(scanIntent)
 
@@ -449,10 +552,51 @@ class LogBookDetailActivity : AppCompatActivity() {
             val time = java.text.SimpleDateFormat("HH:mm:ss").format(now.time)
 
             dbHelper.insertImageEntry(tableName, cameraImagePath!!, date, time)
-
             refreshEntries(tableName)
             entryRecyclerView.scrollToPosition(recyclerAdapter.itemCount - 1)
         }
 
+        if (req == GALLERY_REQUEST_CODE && res == RESULT_OK && data?.data != null) {
+            val pickedUri = data.data!!
+
+            // Persist read permission for this URI (optional but good)
+            contentResolver.takePersistableUriPermission(
+                pickedUri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
+
+            // 1) Open input stream from picked URI
+            val inputStream = contentResolver.openInputStream(pickedUri) ?: return
+
+            // 2) Create target file in app internal dir
+            val now = java.util.Calendar.getInstance()
+            val ts = java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.getDefault())
+                .format(now.time)
+
+            val imagesDir = java.io.File(filesDir, "onelogs_images")
+            val fileName = "IMG_GAL_$ts.jpg"
+            if (!imagesDir.exists()) imagesDir.mkdirs()
+
+            val destFile = java.io.File(imagesDir, "IMG_GAL_$ts.jpg")
+
+            // 3) Copy bytes
+            inputStream.use { inStream ->
+                java.io.FileOutputStream(destFile).use { outStream ->
+                    inStream.copyTo(outStream)
+                }
+            }
+
+            // 4) Insert DB entry with internal path
+            val date = java.text.SimpleDateFormat("yyyy-MM-dd").format(now.time)
+            val time = java.text.SimpleDateFormat("HH:mm:ss").format(now.time)
+
+            val relativePath = "onelogs_images/$fileName"
+            dbHelper.insertImageEntry(tableName, relativePath, date, time)
+
+            // 5) Refresh UI
+            refreshEntries(tableName)
+            entryRecyclerView.scrollToPosition(recyclerAdapter.itemCount - 1)
+        }
     }
+
 }

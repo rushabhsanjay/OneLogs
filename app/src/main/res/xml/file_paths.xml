@@ -1,5 +1,19 @@
-<paths>
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Public shared storage root (/storage/emulated/0/...) -->
     <external-path
-        name="external_files"
+        name="external_root"
         path="." />
+
+    <!-- App-specific external directory (context.getExternalFilesDir) -->
+    <external-files-path
+        name="app_external_files"
+        path="." />
+
+    <!-- Internal app files (context.filesDir) -->
+    <files-path
+        name="internal_files"
+        path="." />
+
 </paths>

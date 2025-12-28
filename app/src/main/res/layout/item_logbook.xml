@@ -1,0 +1,17 @@
+<TextView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/tvLogbookName"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="4dp"
+    android:background="@drawable/bg_logbook_item"
+    android:clickable="true"
+    android:focusable="true"
+    android:textColor="@color/md_theme_dark_onSurface"
+    android:textSize="16sp"
+    android:paddingLeft="12dp"
+    android:paddingRight="12dp"
+    android:paddingTop="10dp"
+    android:paddingBottom="10dp"
+    android:maxLines="1"
+    android:ellipsize="end" />
